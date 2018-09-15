@@ -145,7 +145,7 @@ def save_parametrics_cache():
 		with open(get_parametrics_cache_file_name(), "wt") as ctx_file:
 			json.dump(PARAMETRICS_CACHE, ctx_file, indent=4, sort_keys=True)
 	except Exception as e:
-		print >> sys.stderr, "Failed to save parametrics cache: " + str(e)
+		eprint("Failed to save parametrics cache: " + str(e))
 
 	return
 
@@ -162,8 +162,8 @@ def save_global_context():
 		with open(get_context_file_name(), "wt") as ctx_file:
 			json.dump(GLOBAL_CONTEXT, ctx_file, indent=4, sort_keys=True)
 	except Exception as e:
-		print >> sys.stderr, "Failed to save save/configuration: " + str(e)
-		print >> sys.stderr, "Current state: " + str(GLOBAL_CONTEXT)
+		eprint("Failed to save save/configuration: " + str(e))
+		eprint("Current state: " + str(GLOBAL_CONTEXT))
 
 	return
 
@@ -202,30 +202,30 @@ def load_global_context():
 		with open(get_context_file_name(), "rt") as ctx_file:
 			GLOBAL_CONTEXT = json.load(ctx_file)
 	except Exception as e:
-		print >> sys.stderr, "Failed to parse state/cofig file: " + str(e)
+		eprint("Failed to parse state/cofig file: " + str(e))
 		raise e
 
-	if not GLOBAL_CONTEXT.has_key(CK_API_CLIENT_ID):
+	if not CK_API_CLIENT_ID in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the API_CLIENT_ID key.  This is part of the API configuration on the Digi-Key API portal.")
 
-	if not GLOBAL_CONTEXT.has_key(CK_API_SECRET):
+	if not CK_API_SECRET in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the API_SECRET key.  This is part of the API configuration on the Digi-Key API portal.")
 
-	if not GLOBAL_CONTEXT.has_key(CK_API_REDIRECT):
+	if not CK_API_REDIRECT in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the API_REDIRECT_URI key.  This is part of the API configuration on the Digi-Key API portal.")
 
-	if not GLOBAL_CONTEXT.has_key(CK_LOGIN_NAME):
+	if not CK_LOGIN_NAME in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the LOGIN_NAME key.  This is the login name of your Digi-Key account that you use to buy parts.")
 
-	if not GLOBAL_CONTEXT.has_key(CK_LOGIN_PASSWORD):
+	if not CK_LOGIN_PASSWORD in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the LOGIN_PASSWORD key.  This is the password of your Digi-Key account that you use to buy parts.")
 
 
-	if not GLOBAL_CONTEXT.has_key(CK_CONTEXT):
+	if not CK_CONTEXT in GLOBAL_CONTEXT:
 		raise ValueError("State/config file is missing the CONTEXT.  This means that your file is corrupt/incomplete.  Please read documentation in this source file.")
 
 
-	if not GLOBAL_CONTEXT.has_key(CK_DEBUG):
+	if not CK_DEBUG in GLOBAL_CONTEXT:
 		GLOBAL_CONTEXT[CK_DEBUG] = "FALSE"
 
 	if GLOBAL_CONTEXT[CK_DEBUG] == "TRUE":
@@ -324,12 +324,12 @@ def invoke_auth_magic_one():
 	r = https_session.post(magic_string)
 
 	if r.status_code != 200:
-		print >> sys.stderr, ("*" * 10) + " ERROR OUTPUT START " + ("*" * 10)
-		print >> sys.stderr, "Failed in the first sub-step of the authentication magic step one."
-		print >> sys.stderr, "Response code: " + r.status_code
+		eprint(("*" * 10) + " ERROR OUTPUT START " + ("*" * 10))
+		eprint("Failed in the first sub-step of the authentication magic step one.")
+		eprint("Response code: " + r.status_code)
 		dump_response_headers(r, sys.stderr)
-		print >> sys.stderr, r.text
-		print >> sys.stderr, ("*" * 10) + " ERROR OUTPUT END " + ("*" * 10)
+		eprint(r.text)
+		eprint(("*" * 10) + " ERROR OUTPUT END " + ("*" * 10))
 		raise RuntimeError("Failed to get new tokens in authentication magic step one.  See program output for details.")
 
 	html_parser = MyHTMLParser()
@@ -346,12 +346,12 @@ def invoke_auth_magic_one():
 	# XXX I guess here there could be another response.  If the session is expired there might be another clickthrough dialog.
 	#
 	if r.status_code != 302:
-		print >> sys.stderr, ("*" * 10) + " ERROR OUTPUT START " + ("*" * 10)
-		print >> sys.stderr, "Failed in the second sub-step of the authentication magic step one."
-		print >> sys.stderr, "Response code: " + r.status_code
+		eprint(("*" * 10) + " ERROR OUTPUT START " + ("*" * 10))
+		eprint("Failed in the second sub-step of the authentication magic step one.")
+		eprint("Response code: " + r.status_code)
 		dump_response_headers(r, sys.stderr)
-		print >> sys.stderr, r.text
-		print >> sys.stderr, ("*" * 10) + " ERROR OUTPUT END " + ("*" * 10)
+		eprint(r.text)
+		eprint(("*" * 10) + " ERROR OUTPUT END " + ("*" * 10))
 		raise RuntimeError("Failed to get new tokens in authentication magic step one.  See program output for details.")
 
 	magic_code = None
@@ -368,7 +368,7 @@ def invoke_auth_magic_one():
 
 		magic_code = r.headers["Location"].split("?")[1].split("=")[1]
 	except Exception as e:
-		print >> sys.stderr, "Failed to extract code from the 'Location' response header: " + str(e)
+		eprint("Failed to extract code from the 'Location' response header: " + str(e))
 		dump_response_headers(r, sys.stderr)
 		raise RuntimeError("Failed to get new tokens in authentication magic step one.  See program output for details.")
 
@@ -409,11 +409,11 @@ def invoke_auth_magic_two(_code):
 	r = requests.post(magic_string,data = post_data)
 
 	if r.status_code < 200 or r.status_code >= 300:
-		print >> sys.stderr, "Failed to get new tokens in authentication magic step two"
-		print >> sys.stderr, "Response code: " + str(r.status_code)
+		eprint("Failed to get new tokens in authentication magic step two")
+		eprint("Response code: " + str(r.status_code))
 		dump_response_headers(r, sys.stderr)
-		print >> sys.stderr, "Response text: "
-		print >> sys.stderr, r.text
+		eprint("Response text: ")
+		eprint(r.text)
 
 		raise RuntimeError("Failed to get new tokens in authentication magic step two.  See program output for details.")
 
@@ -469,7 +469,7 @@ def refresh_auth_token():
 		GLOBAL_CONTEXT[CK_CONTEXT][CK_CONTEXT_TS] = datetime.datetime.now().isoformat()
 	else:
 		# Uh oh number 2
-		print >> sys.stderr, "Failed to refresh token: " + str(jo)
+		eprint("Failed to refresh token: " + str(jo))
 		raise RuntimeError("Failed to refresh token: " + str(jo))
 
 	return
@@ -621,19 +621,19 @@ def process_commands():
 		print(create_auth_magic_url_one())
 	elif args.CMD == "STR_M2":
 		if args.P == None:
-			print >> sys.stderr, "Must specify the 'code' that was provided by the site in response to magic string 1."
+			eprint("Must specify the 'code' that was provided by the site in response to magic string 1.")
 		else:
 			print(create_auth_magic_url_two(args.P))
 	elif args.CMD == "INVOKE_M1":
 		print(invoke_auth_magic_one())
 	elif args.CMD == "INVOKE_M2":
 		if args.P == None:
-			print >> sys.stderr, "Must specify the 'code' that was provided by the site in response to magic string 1."
+			eprint("Must specify the 'code' that was provided by the site in response to magic string 1.")
 		else:
 			invoke_auth_magic_two(args.P)
 	elif args.CMD == "PART_SEARCH":
 		if args.P == None:
-			print >> sys.stderr, "Must specify Digi-Key part number using the -P parameter when the command is PART_SEARCH."
+			eprint("Must specify Digi-Key part number using the -P parameter when the command is PART_SEARCH.")
 		else:
 			print(search_for_part(args.P, args.C, args.Jc))
 	elif args.CMD == "DBG1":
@@ -649,7 +649,7 @@ def main():
 	try:
 		load_global_context();
 	except ValueError as e:
-		print >> sys.stderr, "Failed to load state/config file: " + str(e)
+		eprint("Failed to load state/config file: " + str(e))
 		return
 
 	load_parametrics_cache()
@@ -663,7 +663,7 @@ def main():
 		# Magic failed
 		#
 
-		print >> sys.stderr, "Something went boom while processing magic: " + str(e)
+		eprint("Something went boom while processing magic: " + str(e))
 		traceback.print_exc()
 		exit(-1)
 
@@ -673,10 +673,14 @@ def main():
 	try:
 		save_global_context();
 	except ValueError as e:
-		print >> sys.stderr, "Failed to load state/config file: " + str(e)
+		eprint("Failed to load state/config file: " + str(e))
 		return
 
 	save_parametrics_cache()
+
+#Print to stderr
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 if __name__ == '__main__':
 	main()
