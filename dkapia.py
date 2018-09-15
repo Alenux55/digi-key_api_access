@@ -144,7 +144,7 @@ def save_parametrics_cache():
 	try:
 		with open(get_parametrics_cache_file_name(), "wt") as ctx_file:
 			json.dump(PARAMETRICS_CACHE, ctx_file, indent=4, sort_keys=True)
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Failed to save parametrics cache: " + str(e)
 
 	return
@@ -161,7 +161,7 @@ def save_global_context():
 	try:
 		with open(get_context_file_name(), "wt") as ctx_file:
 			json.dump(GLOBAL_CONTEXT, ctx_file, indent=4, sort_keys=True)
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Failed to save save/configuration: " + str(e)
 		print >> sys.stderr, "Current state: " + str(GLOBAL_CONTEXT)
 
@@ -179,7 +179,7 @@ def load_parametrics_cache():
 	try:
 		with open(get_parametrics_cache_file_name(), "rt") as ctx_file:
 			PARAMETRICS_CACHE = json.load(ctx_file)
-	except Exception, e:
+	except Exception as e:
 		# Sink it quietly
 		pass
 
@@ -201,7 +201,7 @@ def load_global_context():
 	try:
 		with open(get_context_file_name(), "rt") as ctx_file:
 			GLOBAL_CONTEXT = json.load(ctx_file)
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Failed to parse state/cofig file: " + str(e)
 		raise e
 
@@ -234,7 +234,7 @@ def load_global_context():
 		DEBUG_FLAG = False
 
 	if DEBUG_FLAG:
-		print "Successfully loaded application state/config."
+		print("Successfully loaded application state/config.")
 
 	return
 
@@ -317,7 +317,7 @@ def invoke_auth_magic_one():
 	"""
 
 	if DEBUG_FLAG:
-		print "Trying to perform first stage of magic: invoking a redirect so user has chance to approve us."
+		print("Trying to perform first stage of magic: invoking a redirect so user has chance to approve us.")
 
 	https_session = requests.Session()
 	magic_string = create_auth_magic_url_one()
@@ -336,7 +336,7 @@ def invoke_auth_magic_one():
 	html_parser.feed(r.text)
 
 	if DEBUG_FLAG:
-		print "Trying to perform second stage of magic: fudging login via form."
+		print("Trying to perform second stage of magic: fudging login via form.")
 
 	https_session.headers.update({"Referer": magic_string, "Content-Type": "application/x-www-form-urlencoded"})
 
@@ -367,7 +367,7 @@ def invoke_auth_magic_one():
 		#
 
 		magic_code = r.headers["Location"].split("?")[1].split("=")[1]
-	except Exception, e:
+	except Exception as e:
 		print >> sys.stderr, "Failed to extract code from the 'Location' response header: " + str(e)
 		dump_response_headers(r, sys.stderr)
 		raise RuntimeError("Failed to get new tokens in authentication magic step one.  See program output for details.")
@@ -376,8 +376,8 @@ def invoke_auth_magic_one():
 		raise RuntimeError("Failed to get new tokens in authentication magic step one.  Magic code seems to be None even though everything went well.")
 
 	if DEBUG_FLAG:
-		print "If we got this far we probably have a new code."
-		print "Code: " + str(magic_code)
+		print("If we got this far we probably have a new code.")
+		print("Code: " + str(magic_code))
 
 	return magic_code
 
@@ -389,14 +389,14 @@ def invoke_auth_magic_two(_code):
 
 	"""
 	if DEBUG_FLAG:
-		print "Trying to collect more magic beans."
+		print("Trying to collect more magic beans.")
 
 	global GLOBAL_CONTEXT
 
 	magic_string = create_auth_magic_url_two(_code)
 
 	if DEBUG_FLAG:
-		print "Magic URL: " + magic_string
+		print("Magic URL: " + magic_string)
 
 	post_data = {}
 
@@ -423,7 +423,7 @@ def invoke_auth_magic_two(_code):
 	GLOBAL_CONTEXT[CK_CONTEXT][CK_CONTEXT_REF_TOK] = d["refresh_token"]
 
 	if DEBUG_FLAG:
-		print "We should have enough magic beans to grow the bean stalk so that we can climb INTO THE CLOUD."
+		print("We should have enough magic beans to grow the bean stalk so that we can climb INTO THE CLOUD.")
 
 	return
 
@@ -450,11 +450,11 @@ def refresh_auth_token():
 	if CK_CONTEXT_REF_TOK not in GLOBAL_CONTEXT[CK_CONTEXT]:
 		# We don't have a refresh token so lets be robust and make one!
 		if DEBUG_FLAG:
-			print CK_CONTEXT_REF_TOK + " is missing.  Will try to perform new authentication magic."
+			print(CK_CONTEXT_REF_TOK + " is missing.  Will try to perform new authentication magic.")
 			return new_auth()
 	else:
 		if DEBUG_FLAG:
-			print CK_CONTEXT_REF_TOK + " exists."
+			print(CK_CONTEXT_REF_TOK + " exists.")
 
 	d = create_api_auth_refresh_parms(GLOBAL_CONTEXT[CK_API_CLIENT_ID], GLOBAL_CONTEXT[CK_API_SECRET], GLOBAL_CONTEXT[CK_CONTEXT][CK_CONTEXT_REF_TOK])
 	r = requests.post(SSO_HOST + "/as/token.oauth2", data=d)
@@ -528,9 +528,9 @@ def get_part_data(_id, _qty):
 	body = json.loads(r.text)
 
 	if DEBUG_FLAG:
-		print "\n" + ("*" * 10) + " RESULT START " + ("*" * 10)
-		print json.dumps(body, indent=4)
-		print ("*" * 10) + " RESULT END " + ("*" * 10) + "\n"
+		print("\n" + ("*" * 10) + " RESULT START " + ("*" * 10))
+		print(json.dumps(body, indent=4))
+		print(("*" * 10) + " RESULT END " + ("*" * 10) + "\n")
 
 	return body
 
@@ -546,7 +546,7 @@ def search_for_part(_part, _count, _compact):
 
 	try:
 		d = get_part_data(_part, _count)
-	except RuntimeError,e:
+	except RuntimeError as e:
 		#
 		# This could be thrown by anything and everything.  We'll assume that just means that no results were found.
 		#
@@ -608,7 +608,7 @@ def process_commands():
 		DEBUG_FLAG = False
 
 	if DEBUG_FLAG == True:
-		print "Debug output is enabled."
+		print("Debug output is enabled.")
 
 	if args.dbgInFile:
 		DBG_IN_FILE = args.dbgInFile
@@ -618,14 +618,14 @@ def process_commands():
 	elif args.CMD == "AUTH_NEW":
 		new_auth()
 	elif args.CMD == "STR_M1":
-		print create_auth_magic_url_one()
+		print(create_auth_magic_url_one())
 	elif args.CMD == "STR_M2":
 		if args.P == None:
 			print >> sys.stderr, "Must specify the 'code' that was provided by the site in response to magic string 1."
 		else:
-			print create_auth_magic_url_two(args.P)
+			print(create_auth_magic_url_two(args.P))
 	elif args.CMD == "INVOKE_M1":
-		print invoke_auth_magic_one()
+		print(invoke_auth_magic_one())
 	elif args.CMD == "INVOKE_M2":
 		if args.P == None:
 			print >> sys.stderr, "Must specify the 'code' that was provided by the site in response to magic string 1."
@@ -635,7 +635,7 @@ def process_commands():
 		if args.P == None:
 			print >> sys.stderr, "Must specify Digi-Key part number using the -P parameter when the command is PART_SEARCH."
 		else:
-			print search_for_part(args.P, args.C, args.Jc)
+			print(search_for_part(args.P, args.C, args.Jc))
 	elif args.CMD == "DBG1":
 		dbg_1()
 	else:
@@ -648,7 +648,7 @@ def main():
 	#
 	try:
 		load_global_context();
-	except ValueError, e:
+	except ValueError as e:
 		print >> sys.stderr, "Failed to load state/config file: " + str(e)
 		return
 
@@ -658,7 +658,7 @@ def main():
 	#
 	try:
 		process_commands()
-	except Exception, e:
+	except Exception as e:
 		#
 		# Magic failed
 		#
@@ -672,7 +672,7 @@ def main():
 	#
 	try:
 		save_global_context();
-	except ValueError, e:
+	except ValueError as e:
 		print >> sys.stderr, "Failed to load state/config file: " + str(e)
 		return
 
